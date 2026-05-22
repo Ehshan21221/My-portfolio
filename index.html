@@ -1,1 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Amimul Ehshan — The Ecosystem</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #05050a;
+  --bg2: #080812;
+  --card: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --pink: #ff2d78;
+  --purple: #8b5cf6;
+  --blue: #3b82f6;
+  --cyan: #06b6d4;
+  --green: #10b981;
+  --yellow: #f59e0b;
+  --white: #f8fafc;
+  --gray: #94a3b8;
+  --dark-gray: #334155;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --grd-main: linear-gradient(135deg, #ff2d78, #8b5cf6, #06b6d4);
+  --grd-warm: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
+  --grd-cool: linear-gradient(135deg, #06b6d4, #8b5cf6, #3b82f6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{background:var(--bg);color:var(--white);font-family:var(--font-body);line-height:1.6;overflow-x:hidden;cursor:none;}
+
+/* ─── CUSTOM CURSOR ─── */
+.cursor{position:fixed;width:12px;height:12px;background:var(--pink);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:transform 0.1s,background 0.3s;mix-blend-mode:difference;}
+.cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(255,45,120,0.5);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:all 0.15s ease;mix-blend-mode:difference;}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--pink);border-radius:2px;}
+
+/* ─── CANVAS BG ─── */
+#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.6;}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1rem 2.5rem;
+  background:rgba(5,5,10,0.7);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--card-border);
+}
+.nav-logo{
+  font-family:var(--font-head);font-size:1.1rem;font-weight:800;
+  background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-decoration:none;letter-spacing:0.05em;
+}
+.nav-links{display:flex;gap:0.3rem;list-style:none;align-items:center;}
+.nav-links a{
+  font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--gray);text-decoration:none;padding:0.4rem 0.9rem;border-radius:99px;
+  transition:all 0.25s ease;border:1px solid transparent;
+}
+.nav-links a:hover,.nav-links a.active{
+  color:var(--white);background:rgba(255,45,120,0.12);border-color:rgba(255,45,120,0.3);
+}
+.nav-social{display:flex;gap:0.6rem;align-items:center;}
+.nav-social a{
+  display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:50%;border:1px solid var(--card-border);
+  color:var(--gray);text-decoration:none;font-size:0.85rem;
+  transition:all 0.25s;
+}
+.nav-social a:hover{border-color:var(--pink);color:var(--pink);background:rgba(255,45,120,0.1);transform:scale(1.1);}
+
+/* ─── HERO ─── */
+#home{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:8rem 2.5rem 4rem;position:relative;z-index:1;
+  max-width:none;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:1.8rem;
+  padding:0.35rem 1rem;border:1px solid rgba(6,182,212,0.3);border-radius:99px;
+  background:rgba(6,182,212,0.06);width:fit-content;
+  opacity:0;animation:slideIn 0.6s ease 0.1s forwards;
+}
+.hero-tag::before{content:'';width:6px;height:6px;background:var(--cyan);border-radius:50%;animation:blink 1.5s ease-in-out infinite;}
+
+.hero-name{
+  font-family:var(--font-head);font-size:clamp(3.5rem,9vw,9rem);font-weight:800;
+  line-height:0.9;letter-spacing:-0.02em;
+  opacity:0;animation:slideIn 0.7s ease 0.25s forwards;
+}
+.hero-name .line1{display:block;color:var(--white);}
+.hero-name .line2{
+  display:block;
+  background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  position:relative;
+}
+/* Glitch effect */
+.hero-name .line2::before,.hero-name .line2::after{
+  content:attr(data-text);position:absolute;top:0;left:0;
+  background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  opacity:0;
+}
+.hero-name .line2::before{animation:glitch1 4s infinite 2s;}
+.hero-name .line2::after{animation:glitch2 4s infinite 2.1s;}
+@keyframes glitch1{
+  0%,90%,100%{opacity:0;transform:none;}
+  92%{opacity:0.8;transform:translate(3px,-2px);filter:hue-rotate(90deg);}
+  94%{opacity:0;transform:translate(-2px,1px);}
+  96%{opacity:0.6;transform:translate(2px,3px);}
+  98%{opacity:0;}
+}
+@keyframes glitch2{
+  0%,90%,100%{opacity:0;transform:none;}
+  92%{opacity:0.6;transform:translate(-3px,2px);filter:hue-rotate(-90deg);}
+  95%{opacity:0;}
+  97%{opacity:0.4;transform:translate(3px,-1px);}
+  99%{opacity:0;}
+}
+
+.hero-name .line3{display:block;color:rgba(255,255,255,0.25);font-size:0.55em;}
+
+.hero-bio{
+  font-size:clamp(1rem,1.5vw,1.15rem);color:var(--gray);
+  max-width:560px;margin-top:1.5rem;line-height:1.8;
+  opacity:0;animation:slideIn 0.7s ease 0.45s forwards;
+}
+.hero-bio b{color:var(--white);font-weight:600;}
+
+.hero-pills{
+  display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:2rem;
+  opacity:0;animation:slideIn 0.7s ease 0.6s forwards;
+}
+.pill{
+  padding:0.4rem 1rem;border-radius:99px;font-family:var(--font-mono);font-size:0.65rem;
+  letter-spacing:0.1em;text-transform:uppercase;border:1px solid;transition:all 0.25s;
+}
+.pill-pink{color:var(--pink);border-color:rgba(255,45,120,0.35);background:rgba(255,45,120,0.06);}
+.pill-purple{color:var(--purple);border-color:rgba(139,92,246,0.35);background:rgba(139,92,246,0.06);}
+.pill-cyan{color:var(--cyan);border-color:rgba(6,182,212,0.35);background:rgba(6,182,212,0.06);}
+.pill-green{color:var(--green);border-color:rgba(16,185,129,0.35);background:rgba(16,185,129,0.06);}
+.pill:hover{transform:translateY(-2px);filter:brightness(1.3);}
+
+.hero-ctas{
+  display:flex;gap:1rem;margin-top:2.5rem;flex-wrap:wrap;
+  opacity:0;animation:slideIn 0.7s ease 0.75s forwards;
+}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:0.6rem;
+  padding:0.85rem 2rem;border-radius:12px;text-decoration:none;
+  background:var(--grd-main);color:var(--white);font-family:var(--font-body);font-size:0.9rem;font-weight:600;
+  transition:all 0.3s;position:relative;overflow:hidden;
+}
+.btn-primary::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background 0.3s;}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(255,45,120,0.35);}
+.btn-primary:hover::before{background:rgba(255,255,255,0.08);}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:0.6rem;
+  padding:0.85rem 2rem;border-radius:12px;text-decoration:none;
+  border:1px solid var(--card-border);color:var(--gray);font-size:0.9rem;font-weight:500;
+  transition:all 0.3s;background:var(--card);
+}
+.btn-ghost:hover{border-color:rgba(139,92,246,0.5);color:var(--white);transform:translateY(-3px);background:rgba(139,92,246,0.08);}
+
+/* Stats row */
+.hero-stats{
+  display:flex;gap:2.5rem;margin-top:3.5rem;padding-top:2.5rem;
+  border-top:1px solid var(--card-border);
+  opacity:0;animation:slideIn 0.7s ease 0.9s forwards;
+  flex-wrap:wrap;
+}
+.stat{display:flex;flex-direction:column;gap:0.2rem;}
+.stat-n{font-family:var(--font-head);font-size:2rem;font-weight:800;line-height:1;}
+.stat-n.grad{background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-n.grad2{background:var(--grd-cool);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-n.grad3{background:var(--grd-warm);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-l{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark-gray);}
+
+/* Scroll indicator */
+.scroll-ind{
+  position:absolute;bottom:2.5rem;left:2.5rem;
+  display:flex;align-items:center;gap:0.8rem;
+  opacity:0;animation:slideIn 0.7s ease 1.2s forwards;
+}
+.scroll-ind span{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.25em;color:var(--dark-gray);text-transform:uppercase;}
+.scroll-wheel{width:20px;height:32px;border:1px solid var(--dark-gray);border-radius:10px;display:flex;justify-content:center;padding-top:5px;}
+.scroll-wheel::after{content:'';width:3px;height:6px;background:var(--pink);border-radius:2px;animation:scrollDown 2s ease-in-out infinite;}
+@keyframes scrollDown{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(10px);opacity:0;}}
+
+@keyframes slideIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+
+/* ─── SECTION ─── */
+.section-wrap{max-width:1200px;margin:0 auto;padding:7rem 2.5rem;position:relative;z-index:1;}
+
+.section-eyebrow{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.3em;text-transform:uppercase;
+  margin-bottom:1.2rem;
+}
+.ey-pink{color:var(--pink);}
+.ey-purple{color:var(--purple);}
+.ey-cyan{color:var(--cyan);}
+.ey-line{width:24px;height:1px;}
+.ey-pink .ey-line{background:var(--pink);}
+.ey-purple .ey-line{background:var(--purple);}
+.ey-cyan .ey-line{background:var(--cyan);}
+
+.section-title{
+  font-family:var(--font-head);font-size:clamp(2.2rem,4vw,4rem);font-weight:800;
+  line-height:1.05;letter-spacing:-0.01em;margin-bottom:0.8rem;
+}
+.section-sub{font-size:1rem;color:var(--gray);max-width:450px;line-height:1.7;}
+
+/* ─── DIVIDER ─── */
+.hr-grad{
+  height:1px;border:none;
+  background:linear-gradient(to right,transparent,rgba(255,45,120,0.3),rgba(139,92,246,0.3),transparent);
+  margin:0;
+}
+
+/* ─── TIMELINE ─── */
+.tl-wrap{position:relative;padding-left:2rem;margin-top:3.5rem;}
+.tl-line{
+  position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--pink),var(--purple),var(--cyan),var(--green));
+  border-radius:2px;
+}
+.tl-item{
+  position:relative;margin-bottom:2rem;
+  opacity:0;transform:translateX(-30px);
+  transition:opacity 0.6s ease,transform 0.6s ease;
+}
+.tl-item.vis{opacity:1;transform:translateX(0);}
+
+.tl-dot{
+  position:absolute;left:-2.45rem;top:1.2rem;
+  width:16px;height:16px;border-radius:50%;border:2px solid;background:var(--bg);
+  transition:all 0.3s;
+}
+.tl-item:hover .tl-dot{transform:scale(1.4);}
+.dot-pink{border-color:var(--pink);box-shadow:0 0 10px rgba(255,45,120,0.5);}
+.tl-item:hover .dot-pink{background:var(--pink);box-shadow:0 0 20px rgba(255,45,120,0.8);}
+.dot-purple{border-color:var(--purple);box-shadow:0 0 10px rgba(139,92,246,0.5);}
+.tl-item:hover .dot-purple{background:var(--purple);}
+.dot-cyan{border-color:var(--cyan);box-shadow:0 0 10px rgba(6,182,212,0.5);}
+.tl-item:hover .dot-cyan{background:var(--cyan);}
+.dot-green{border-color:var(--green);box-shadow:0 0 10px rgba(16,185,129,0.5);}
+.tl-item:hover .dot-green{background:var(--green);}
+.dot-yellow{border-color:var(--yellow);box-shadow:0 0 10px rgba(245,158,11,0.5);}
+.tl-item:hover .dot-yellow{background:var(--yellow);}
+
+.tl-card{
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:16px;padding:1.6rem 1.8rem;
+  transition:all 0.3s ease;position:relative;overflow:hidden;
+}
+.tl-card::before{
+  content:'';position:absolute;inset:0;border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,255,255,0.04) 0%,transparent 50%);
+  pointer-events:none;
+}
+.tl-item:hover .tl-card{
+  transform:translateY(-4px);
+  box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+.tl-card.c-pink{border-color:rgba(255,45,120,0.2);}
+.tl-item:hover .tl-card.c-pink{border-color:rgba(255,45,120,0.4);box-shadow:0 20px 60px rgba(255,45,120,0.08);}
+.tl-card.c-purple{border-color:rgba(139,92,246,0.2);}
+.tl-item:hover .tl-card.c-purple{border-color:rgba(139,92,246,0.4);box-shadow:0 20px 60px rgba(139,92,246,0.08);}
+.tl-card.c-cyan{border-color:rgba(6,182,212,0.2);}
+.tl-item:hover .tl-card.c-cyan{border-color:rgba(6,182,212,0.4);box-shadow:0 20px 60px rgba(6,182,212,0.08);}
+.tl-card.c-green{border-color:rgba(16,185,129,0.2);}
+.tl-item:hover .tl-card.c-green{border-color:rgba(16,185,129,0.4);box-shadow:0 20px 60px rgba(16,185,129,0.08);}
+.tl-card.c-yellow{border-color:rgba(245,158,11,0.2);}
+.tl-item:hover .tl-card.c-yellow{border-color:rgba(245,158,11,0.4);box-shadow:0 20px 60px rgba(245,158,11,0.08);}
+
+.tl-date{font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.5rem;}
+.tl-date.pink{color:var(--pink);}
+.tl-date.purple{color:var(--purple);}
+.tl-date.cyan{color:var(--cyan);}
+.tl-date.green{color:var(--green);}
+.tl-date.yellow{color:var(--yellow);}
+
+.tl-title{font-family:var(--font-head);font-size:1.4rem;font-weight:700;color:var(--white);margin-bottom:0.6rem;line-height:1.2;}
+.tl-desc{font-size:0.92rem;color:var(--gray);line-height:1.75;}
+.tl-tag{
+  display:inline-flex;align-items:center;gap:0.4rem;
+  margin-top:1rem;padding:0.3rem 0.8rem;border-radius:99px;
+  font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;
+  border:1px solid;
+}
+.tag-pink{color:var(--pink);border-color:rgba(255,45,120,0.3);background:rgba(255,45,120,0.07);}
+.tag-purple{color:var(--purple);border-color:rgba(139,92,246,0.3);background:rgba(139,92,246,0.07);}
+.tag-cyan{color:var(--cyan);border-color:rgba(6,182,212,0.3);background:rgba(6,182,212,0.07);}
+.tag-green{color:var(--green);border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.07);}
+.tag-yellow{color:var(--yellow);border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.07);animation:livePulse 2s ease-in-out infinite;}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0);}50%{box-shadow:0 0 0 6px rgba(245,158,11,0.05);}}
+
+/* ─── QUOTE MARQUEE ─── */
+.marquee-wrap{
+  overflow:hidden;padding:2.5rem 0;
+  border-top:1px solid var(--card-border);
+  border-bottom:1px solid var(--card-border);
+  background:rgba(255,255,255,0.01);
+  position:relative;z-index:1;
+}
+.marquee-track{
+  display:flex;gap:3rem;white-space:nowrap;
+  animation:marquee 20s linear infinite;
+}
+.marquee-item{
+  font-family:var(--font-head);font-size:1.1rem;font-weight:700;
+  letter-spacing:0.05em;text-transform:uppercase;
+  display:flex;align-items:center;gap:1.5rem;flex-shrink:0;
+}
+.marquee-item span{background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.marquee-item .dot-sep{color:var(--dark-gray);}
+@keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ─── VAULT ─── */
+.vault-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:3rem;}
+@media(max-width:700px){.vault-grid{grid-template-columns:1fr;}}
+
+.vault-card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:16px;
+  overflow:hidden;
+  opacity:0;transform:translateY(20px);
+  transition:opacity 0.5s ease,transform 0.5s ease,border-color 0.3s;
+}
+.vault-card.vis{opacity:1;transform:translateY(0);}
+.vault-card:hover{border-color:rgba(139,92,246,0.3);}
+.vault-card.full{grid-column:1/-1;}
+
+.vc-head{
+  display:flex;align-items:center;gap:0.9rem;
+  padding:1.2rem 1.5rem;cursor:pointer;user-select:none;
+  border-bottom:1px solid transparent;transition:all 0.25s;
+}
+.vault-card.open .vc-head{border-bottom-color:var(--card-border);background:rgba(139,92,246,0.05);}
+.vc-emoji{font-size:1.2rem;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.12);border-radius:10px;border:1px solid rgba(139,92,246,0.2);}
+.vc-title{font-family:var(--font-head);font-size:1.05rem;font-weight:700;color:var(--white);flex:1;}
+.vc-arr{font-family:var(--font-mono);font-size:0.7rem;color:var(--dark-gray);transition:transform 0.3s,color 0.3s;}
+.vault-card.open .vc-arr{transform:rotate(180deg);color:var(--purple);}
+
+.vc-body{max-height:0;overflow:hidden;transition:max-height 0.45s ease,padding 0.3s;}
+.vault-card.open .vc-body{max-height:700px;padding:1.5rem;}
+
+.edu-row{margin-bottom:1.4rem;padding-bottom:1.4rem;border-bottom:1px solid var(--card-border);}
+.edu-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.edu-name{font-weight:600;color:var(--white);font-size:0.95rem;line-height:1.4;margin-bottom:0.25rem;}
+.edu-loc{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--dark-gray);margin-bottom:0.5rem;}
+.edu-badge{
+  display:inline-block;padding:0.25rem 0.8rem;border-radius:99px;
+  font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;
+  background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);color:var(--cyan);
+}
+
+.fam-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0.55rem 0.8rem;border-radius:8px;margin-bottom:0.4rem;
+  border:1px solid transparent;transition:all 0.2s;
+}
+.fam-row:hover{background:rgba(255,255,255,0.03);border-color:var(--card-border);}
+.fam-row.me{background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.2);}
+.fam-role{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark-gray);}
+.fam-name{font-size:0.9rem;color:var(--white);font-weight:500;}
+.fam-row.me .fam-name{background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700;}
+
+.pd-row{display:flex;gap:1rem;align-items:flex-start;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.pd-row:last-child{border-bottom:none;}
+.pd-key{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark-gray);min-width:110px;padding-top:0.1rem;}
+.pd-val{font-size:0.92rem;color:var(--white);}
+
+/* ─── TERMINAL ─── */
+.terminal{
+  background:#020408;border:1px solid var(--card-border);border-radius:16px;
+  overflow:hidden;margin-top:2.5rem;
+  opacity:0;transform:translateY(20px);transition:all 0.6s ease;
+}
+.terminal.vis{opacity:1;transform:translateY(0);}
+.t-bar{
+  display:flex;align-items:center;gap:0.5rem;
+  padding:0.8rem 1.2rem;background:#080d18;border-bottom:1px solid var(--card-border);
+}
+.td{width:11px;height:11px;border-radius:50%;}
+.td-r{background:#ff5f57;}
+.td-y{background:#febc2e;}
+.td-g{background:#28c840;}
+.t-title{font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.2em;color:var(--dark-gray);margin-left:0.5rem;}
+.t-body{padding:1.5rem;display:flex;flex-direction:column;gap:0.6rem;}
+.t-row{font-family:var(--font-mono);font-size:0.75rem;display:flex;gap:0.6rem;line-height:1.6;}
+.t-p{color:var(--pink);}
+.t-cmd{color:var(--white);}
+.t-res{color:var(--gray);padding-left:1.2rem;}
+.t-pink{color:var(--pink);}
+.t-cyan{color:var(--cyan);}
+.t-green{color:var(--green);}
+.t-yellow{color:var(--yellow);}
+.t-dim{color:var(--dark-gray);}
+.t-cursor{display:inline-block;width:7px;height:14px;background:var(--pink);animation:blink 1s step-end infinite;vertical-align:text-bottom;margin-left:2px;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* ─── SOCIAL SECTION ─── */
+.social-section{
+  max-width:1200px;margin:0 auto;padding:0 2.5rem 7rem;
+  position:relative;z-index:1;
+}
+.social-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:2.5rem;
+}
+@media(max-width:600px){.social-grid{grid-template-columns:1fr;}}
+
+.social-card{
+  display:flex;align-items:center;gap:1.2rem;
+  padding:1.5rem 1.8rem;border-radius:16px;border:1px solid var(--card-border);
+  background:var(--card);text-decoration:none;
+  transition:all 0.3s ease;position:relative;overflow:hidden;
+}
+.social-card::before{
+  content:'';position:absolute;inset:0;
+  opacity:0;transition:opacity 0.3s;
+}
+.sc-fb::before{background:radial-gradient(circle at left,rgba(24,119,242,0.12) 0%,transparent 60%);}
+.sc-ig::before{background:radial-gradient(circle at left,rgba(225,48,108,0.12) 0%,transparent 60%);}
+.social-card:hover::before{opacity:1;}
+.social-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,0.4);}
+.sc-fb:hover{border-color:rgba(24,119,242,0.4);}
+.sc-ig:hover{border-color:rgba(225,48,108,0.4);}
+
+.s-icon{
+  width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;flex-shrink:0;
+}
+.si-fb{background:rgba(24,119,242,0.15);border:1px solid rgba(24,119,242,0.25);}
+.si-ig{background:linear-gradient(135deg,rgba(253,186,74,0.15),rgba(225,48,108,0.15),rgba(131,58,180,0.15));border:1px solid rgba(225,48,108,0.2);}
+
+.s-info{flex:1;}
+.s-platform{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark-gray);margin-bottom:0.2rem;}
+.s-handle{font-family:var(--font-head);font-size:1.1rem;font-weight:700;color:var(--white);transition:color 0.3s;}
+.sc-fb:hover .s-handle{color:#4fa3ff;}
+.sc-ig:hover .s-handle{color:#f77737;}
+.s-arr{font-size:1.2rem;color:var(--dark-gray);transition:all 0.3s;}
+.social-card:hover .s-arr{transform:translate(3px,-3px);color:var(--white);}
+
+/* ─── FOOTER ─── */
+footer{
+  border-top:1px solid var(--card-border);padding:2.5rem;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem;
+  position:relative;z-index:1;
+}
+.f-brand{font-family:var(--font-head);font-size:1.2rem;font-weight:800;background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.f-loc{font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gray);display:flex;align-items:center;gap:0.5rem;}
+.f-loc::before{content:'◉';color:var(--green);animation:lp 2s ease-in-out infinite;}
+@keyframes lp{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.f-copy{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark-gray);}
+
+/* ─── FADE IN OBS ─── */
+.fi{opacity:0;transform:translateY(25px);transition:all 0.65s ease;}
+.fi.vis{opacity:1;transform:translateY(0);}
+
+/* ─── MOBILE ─── */
+@media(max-width:768px){
+  nav{padding:0.9rem 1.2rem;}
+  .nav-links{gap:0.2rem;}
+  .nav-links a{padding:0.35rem 0.6rem;font-size:0.6rem;}
+  #home{padding:7rem 1.5rem 4rem;}
+  .section-wrap{padding:5rem 1.5rem;}
+  .hero-stats{gap:1.5rem;}
+  .social-section{padding:0 1.5rem 5rem;}
+  footer{flex-direction:column;text-align:center;padding:2rem 1.5rem;}
+}
+@media(max-width:480px){
+  .nav-social{display:none;}
+  .hero-ctas{flex-direction:column;}
+  .btn-primary,.btn-ghost{justify-content:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Canvas particles -->
+<canvas id="bgCanvas"></canvas>
+
+<!-- ─── NAV ─── -->
+<nav id="mainNav">
+  <a href="#home" class="nav-logo">AMIMUL ✦</a>
+  <ul class="nav-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+    <li><a href="#vault">Vault</a></li>
+    <li><a href="#connect">Connect</a></li>
+  </ul>
+  <div class="nav-social">
+    <a href="https://www.facebook.com/share/1DAVbWtvUE/" target="_blank" rel="noopener" title="Facebook">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+    </a>
+    <a href="https://www.instagram.com/amimulehsanbabu?igsh=a2RpamNxdWZ6NDd0" target="_blank" rel="noopener" title="Instagram">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+    </a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<div id="home">
+  <p class="hero-tag">✦ Personal Ecosystem · Born 2000</p>
+
+  <h1 class="hero-name">
+    <span class="line1">Khondaker</span>
+    <span class="line2" data-text="Amimul">Amimul</span>
+    <span class="line3">Ehshan Babu</span>
+  </h1>
+
+  <p class="hero-bio">
+    A journey from <b>Sylhet</b> to Doha to <b>Sohar, Oman</b> — educator, technologist, and digital operations lead. Currently building legacy at the intersection of <b>family, faith & tech</b>.
+  </p>
+
+  <div class="hero-pills">
+    <span class="pill pill-pink">✈ 3 Countries</span>
+    <span class="pill pill-purple">💻 BSc CSE</span>
+    <span class="pill pill-cyan">☪ Umrah '23</span>
+    <span class="pill pill-green">⚡ Live in Oman</span>
+  </div>
+
+  <div class="hero-ctas">
+    <a href="#timeline" class="btn-primary">Explore Journey →</a>
+    <a href="#connect" class="btn-ghost">Connect With Me ↗</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-n grad">25</span><span class="stat-l">Years Old</span></div>
+    <div class="stat"><span class="stat-n grad2">3</span><span class="stat-l">Countries</span></div>
+    <div class="stat"><span class="stat-n grad3">3.01</span><span class="stat-l">CGPA / CSE</span></div>
+    <div class="stat"><span class="stat-n" style="color:var(--green);">∞</span><span class="stat-l">Still Writing</span></div>
+  </div>
+
+  <div class="scroll-ind">
+    <div class="scroll-wheel"></div>
+    <span>Scroll to explore</span>
+  </div>
+</div>
+
+<hr class="hr-grad"/>
+
+<!-- ─── TIMELINE ─── -->
+<div class="section-wrap" id="timeline">
+  <div class="fi">
+    <div class="section-eyebrow ey-pink"><div class="ey-line"></div>Chapter Two</div>
+    <h2 class="section-title">The <span style="background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Timeline</span></h2>
+    <p class="section-sub">Major milestones mapped in order — the unfolding of a life.</p>
+  </div>
+
+  <div class="tl-wrap">
+    <div class="tl-line"></div>
+
+    <div class="tl-item">
+      <div class="tl-dot dot-pink"></div>
+      <div class="tl-card c-pink">
+        <div class="tl-date pink">July 2 — Dec 20, 2023</div>
+        <div class="tl-title">Qatar Chapter ✈</div>
+        <div class="tl-desc">Departed Bangladesh for the State of Qatar — a formative stint abroad that expanded perspective across culture, work, and the broader Muslim world. A pivotal chapter of self-discovery far beyond familiar borders.</div>
+        <span class="tl-tag tag-pink">✈ Travel · Growth</span>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot dot-cyan"></div>
+      <div class="tl-card c-cyan">
+        <div class="tl-date cyan">December 7, 2023</div>
+        <div class="tl-title">First Umrah — Makkah ☪</div>
+        <div class="tl-desc">Performed the sacred pilgrimage of Umrah in Makkah Al-Mukarramah. A deeply spiritual milestone — standing at the Kaaba for the first time, fulfilling a lifelong aspiration of faith and devotion.</div>
+        <span class="tl-tag tag-cyan">☪ Faith · Pilgrimage</span>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot dot-green"></div>
+      <div class="tl-card c-green">
+        <div class="tl-date green">April 2024 — Feb 2025</div>
+        <div class="tl-title">ICT Teacher 💻</div>
+        <div class="tl-desc">Joined <em>Tanzimul Ummah Madrasah</em> as an ICT Teacher — bridging traditional Islamic education with modern digital literacy. Empowering the next generation with technology rooted in values.</div>
+        <span class="tl-tag tag-green">💻 Education · Tech</span>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot dot-purple"></div>
+      <div class="tl-card c-purple">
+        <div class="tl-date purple">August 1, 2024</div>
+        <div class="tl-title">Marriage ♡</div>
+        <div class="tl-desc">Entered a new covenant — a moment of deep joy and commitment. Marriage became the anchor of a new chapter, uniting two families and two life paths into one shared journey.</div>
+        <span class="tl-tag tag-purple">♡ Family · New Chapter</span>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot dot-yellow"></div>
+      <div class="tl-card c-yellow">
+        <div class="tl-date yellow">March 5, 2025 — Present ⚡</div>
+        <div class="tl-title">Sohar, Oman — Digital & Ops</div>
+        <div class="tl-desc">Relocated to Sohar, Sultanate of Oman to lead digital strategy and operations at <em>Islam International</em> — the family's established enterprise. Managing the intersection of modern digital channels and operational excellence.</div>
+        <span class="tl-tag tag-yellow">⚡ Live Now · Sohar, Oman</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── MARQUEE ─── -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <div class="marquee-item"><span>Sylhet, BD</span><span class="dot-sep">◆</span><span>Doha, QA</span><span class="dot-sep">◆</span><span>Sohar, OM</span><span class="dot-sep">◆</span>BSc CSE<span class="dot-sep">◆</span>ICT Teacher<span class="dot-sep">◆</span>Umrah 2023<span class="dot-sep">◆</span>Married 2024<span class="dot-sep">◆</span>Digital Ops<span class="dot-sep">◆</span></div>
+    <div class="marquee-item"><span>Sylhet, BD</span><span class="dot-sep">◆</span><span>Doha, QA</span><span class="dot-sep">◆</span><span>Sohar, OM</span><span class="dot-sep">◆</span>BSc CSE<span class="dot-sep">◆</span>ICT Teacher<span class="dot-sep">◆</span>Umrah 2023<span class="dot-sep">◆</span>Married 2024<span class="dot-sep">◆</span>Digital Ops<span class="dot-sep">◆</span></div>
+  </div>
+</div>
+
+<!-- ─── VAULT ─── -->
+<div class="section-wrap" id="vault">
+  <div class="fi">
+    <div class="section-eyebrow ey-purple"><div class="ey-line"></div>The Archive</div>
+    <h2 class="section-title">The <span style="background:var(--grd-cool);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Vault</span></h2>
+    <p class="section-sub">Deep records — education, roots, and the data of a life lived intentionally. Tap to unlock.</p>
+  </div>
+
+  <div class="vault-grid">
+
+    <div class="vault-card full">
+      <div class="vc-head" onclick="toggleVault(this)">
+        <div class="vc-emoji">🎓</div>
+        <div class="vc-title">Academic Record</div>
+        <span class="vc-arr">▾</span>
+      </div>
+      <div class="vc-body">
+        <div class="edu-row">
+          <div class="edu-name">Al Amin Jamea Islamia High School & College</div>
+          <div class="edu-loc">Islampur Mejortila, Sylhet · 2006–2016</div>
+          <span class="edu-badge">SSC · Science · GPA 4.61</span>
+        </div>
+        <div class="edu-row">
+          <div class="edu-name">Shahjalal Jamea Islamia School & College</div>
+          <div class="edu-loc">Mirabazar, Sylhet · 2016–2018</div>
+          <span class="edu-badge">HSC · Science · GPA 4.08</span>
+        </div>
+        <div class="edu-row">
+          <div class="edu-name">Sylhet International University</div>
+          <div class="edu-loc">Shamimabad Bagbari, Sylhet · 2018–2022</div>
+          <span class="edu-badge">BSc in CSE · CGPA 3.01 / 4.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="vault-card">
+      <div class="vc-head" onclick="toggleVault(this)">
+        <div class="vc-emoji">🌳</div>
+        <div class="vc-title">Family Lineage</div>
+        <span class="vc-arr">▾</span>
+      </div>
+      <div class="vc-body">
+        <div class="fam-row"><span class="fam-role">Father</span><span class="fam-name">Khondaker Enayet Karim</span></div>
+        <div class="fam-row"><span class="fam-role">Mother</span><span class="fam-name">Begum Shajeda Karim</span></div>
+        <div class="fam-row"><span class="fam-role">Sister</span><span class="fam-name">Jannatul Ferdous</span></div>
+        <div class="fam-row"><span class="fam-role">Bro #1</span><span class="fam-name">Kh. Yahya Ahmed Adnan</span></div>
+        <div class="fam-row"><span class="fam-role">Bro #2</span><span class="fam-name">Kh. Hasanul Karim Affan</span></div>
+        <div class="fam-row me"><span class="fam-role">Me ★</span><span class="fam-name">Kh. Amimul Ehshan Babu</span></div>
+        <div class="fam-row"><span class="fam-role">Bro #3</span><span class="fam-name">Khondaker Aiman</span></div>
+      </div>
+    </div>
+
+    <div class="vault-card">
+      <div class="vc-head" onclick="toggleVault(this)">
+        <div class="vc-emoji">📋</div>
+        <div class="vc-title">Personal Record</div>
+        <span class="vc-arr">▾</span>
+      </div>
+      <div class="vc-body">
+        <div class="pd-row"><span class="pd-key">Full Name</span><span class="pd-val">Khondaker Amimul Ehshan Babu</span></div>
+        <div class="pd-row"><span class="pd-key">Born</span><span class="pd-val">August 26, 2000</span></div>
+        <div class="pd-row"><span class="pd-key">Origin</span><span class="pd-val">Sylhet, Bangladesh</span></div>
+        <div class="pd-row"><span class="pd-key">Current Base</span><span class="pd-val" style="color:var(--green);">Sohar, Oman 🇴🇲</span></div>
+        <div class="pd-row"><span class="pd-key">Degree</span><span class="pd-val">BSc Computer Science & Engineering</span></div>
+        <div class="pd-row"><span class="pd-key">Status</span><span class="pd-val" style="background:var(--grd-warm);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700;">Married · Building ⚡</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Terminal -->
+  <div class="terminal fi">
+    <div class="t-bar">
+      <div class="td td-r"></div><div class="td td-y"></div><div class="td td-g"></div>
+      <span class="t-title">bash — amimul@ecosystem ~</span>
+    </div>
+    <div class="t-body">
+      <div class="t-row"><span class="t-p">❯</span><span class="t-cmd">whoami</span></div>
+      <div class="t-row"><span class="t-res t-pink">Khondaker Amimul Ehshan Babu</span></div>
+      <div class="t-row"><span class="t-p">❯</span><span class="t-cmd">cat current_status.txt</span></div>
+      <div class="t-row"><span class="t-res"><span class="t-green">● ACTIVE</span> — Digital & Operations · Islam International · Sohar, Oman</span></div>
+      <div class="t-row"><span class="t-p">❯</span><span class="t-cmd">ls ~/countries/</span></div>
+      <div class="t-row"><span class="t-res t-dim">bangladesh/ &nbsp; qatar/ &nbsp; <span class="t-cyan">oman/ (current)</span></span></div>
+      <div class="t-row"><span class="t-p">❯</span><span class="t-cmd">echo $MISSION</span></div>
+      <div class="t-row"><span class="t-res t-yellow">"Building at the crossroads of family, faith, and technology."</span></div>
+      <div class="t-row"><span class="t-p">❯</span><span class="t-cmd"><span class="t-cursor"></span></span></div>
+    </div>
+  </div>
+
+</div>
+
+<hr class="hr-grad"/>
+
+<!-- ─── CONNECT ─── -->
+<div class="social-section" id="connect">
+  <div class="fi">
+    <div class="section-eyebrow ey-cyan"><div class="ey-line"></div>Let's Connect</div>
+    <h2 class="section-title">Find Me <span style="background:var(--grd-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Online</span></h2>
+    <p class="section-sub">Tap in — say hi, follow along, or just vibe with the journey.</p>
+  </div>
+
+  <div class="social-grid fi">
+    <a href="https://www.facebook.com/share/1DAVbWtvUE/" target="_blank" rel="noopener" class="social-card sc-fb">
+      <div class="s-icon si-fb">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#4fa3ff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      </div>
+      <div class="s-info">
+        <div class="s-platform">Facebook</div>
+        <div class="s-handle">Amimul Ehshan Babu</div>
+      </div>
+      <span class="s-arr">↗</span>
+    </a>
+
+    <a href="https://www.instagram.com/amimulehsanbabu?igsh=a2RpamNxdWZ6NDd0" target="_blank" rel="noopener" class="social-card sc-ig">
+      <div class="s-icon si-ig">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="url(#igGrad)">
+          <defs><linearGradient id="igGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#f77737"/><stop offset="50%" style="stop-color:#e1306c"/><stop offset="100%" style="stop-color:#833ab4"/></linearGradient></defs>
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+        </svg>
+      </div>
+      <div class="s-info">
+        <div class="s-platform">Instagram</div>
+        <div class="s-handle">@amimulehsanbabu</div>
+      </div>
+      <span class="s-arr">↗</span>
+    </a>
+  </div>
+</div>
+
+<!-- ─── FOOTER ─── -->
+<hr class="hr-grad"/>
+<footer>
+  <div class="f-brand">KAE · 2026</div>
+  <div class="f-loc">Sohar, Sultanate of Oman 🇴🇲</div>
+  <div class="f-copy">Personal Ecosystem · All Rights Reserved</div>
+</footer>
+
+<script>
+// ── CURSOR ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px';});
+function animRing(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);}
+animRing();
+document.querySelectorAll('a,button,.vc-head').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursor.style.transform='translate(-50%,-50%) scale(2.5)';ring.style.transform='translate(-50%,-50%) scale(1.5)';});
+  el.addEventListener('mouseleave',()=>{cursor.style.transform='translate(-50%,-50%) scale(1)';ring.style.transform='translate(-50%,-50%) scale(1)';});
+});
+
+// ── CANVAS PARTICLES ──
+const canvas=document.getElementById('bgCanvas');
+const ctx=canvas.getContext('2d');
+let W,H,particles=[];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+resize();window.addEventListener('resize',resize);
+const colors=['#ff2d78','#8b5cf6','#06b6d4','#10b981','#f59e0b'];
+class Particle{
+  constructor(){this.reset();}
+  reset(){
+    this.x=Math.random()*W;this.y=Math.random()*H;
+    this.r=Math.random()*1.5+0.3;
+    this.vx=(Math.random()-0.5)*0.3;this.vy=(Math.random()-0.5)*0.3;
+    this.alpha=Math.random()*0.5+0.1;
+    this.color=colors[Math.floor(Math.random()*colors.length)];
+    this.life=0;this.maxLife=Math.random()*300+200;
+  }
+  update(){
+    this.x+=this.vx;this.y+=this.vy;this.life++;
+    if(this.life>this.maxLife||this.x<0||this.x>W||this.y<0||this.y>H)this.reset();
+  }
+  draw(){
+    ctx.save();ctx.globalAlpha=this.alpha*(1-this.life/this.maxLife);
+    ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+}
+for(let i=0;i<120;i++)particles.push(new Particle());
+function drawLines(){
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<100){
+        ctx.save();ctx.globalAlpha=0.04*(1-dist/100);
+        ctx.strokeStyle='#8b5cf6';ctx.lineWidth=0.5;
+        ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.stroke();ctx.restore();
+      }
+    }
+  }
+}
+function animCanvas(){
+  ctx.clearRect(0,0,W,H);
+  particles.forEach(p=>{p.update();p.draw();});
+  drawLines();
+  requestAnimationFrame(animCanvas);
+}
+animCanvas();
+
+// ── INTERSECTION OBSERVER ──
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis');});
+},{threshold:0.1});
+document.querySelectorAll('.fi,.tl-item,.vault-card,.terminal').forEach(el=>obs.observe(el));
+document.querySelectorAll('.tl-item').forEach((el,i)=>el.style.transitionDelay=`${i*0.13}s`);
+document.querySelectorAll('.vault-card').forEach((el,i)=>el.style.transitionDelay=`${i*0.1}s`);
+
+// ── VAULT TOGGLE ──
+function toggleVault(head){
+  const card=head.closest('.vault-card');
+  card.classList.toggle('open');
+}
+
+// ── NAV ACTIVE ──
+const navAs=document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  ['home','timeline','vault','connect'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&window.scrollY>=el.offsetTop-180)cur=id;
+  });
+  navAs.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+});
+
+// ── HERO PARALLAX ──
+window.addEventListener('scroll',()=>{
+  const sy=window.scrollY;
+  const hero=document.querySelector('#home .hero-name');
+  if(hero)hero.style.transform=`translateY(${sy*0.15}px)`;
+});
+</script>
+</body>
+</html>
 
